@@ -1,0 +1,787 @@
+openapi: '3.0.3'
+info:
+  description: This is a simple API to manage object permissions
+  version: 1.0.4
+  title: Permissions Framework API
+  contact:
+    email: apanin@dominodatalab.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+tags:
+  - name: "securables"
+    description: "Securables (Objects that can be secured)"
+  - name: "permissionsets"
+    description: "Permission Sets (Permissions mapped to Subjects)"
+  - name: "grants"
+    description: "Grants (Permission Sets applied to Securables)"
+  - name: "checks"
+    description: "Checking permissions"
+  - name: "subjects"
+    description: "Authorization Subjects"
+  - name: "users"
+    description: "Users as Authorization Subjects"
+  - name: "groups"
+    description: "User Groups as Authorization Subjects"
+paths:
+  /permission-sets:
+    get:
+      operationId: listPermissionSets
+      tags:
+        - "permissionsets"
+      parameters:
+        - $ref: "#/components/parameters/pagingOffset"
+        - $ref: "#/components/parameters/pagingLimit"
+      responses:
+        "200":
+          description: "Display Permission Sets"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/PermissionSetsResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      operationId: createPermissionSet
+      tags:
+        - "permissionsets"
+      description: Create a new Permission Set
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/PermissionSetRequest"
+        required: true
+      responses:
+        "201":
+          description: "Display created PermissionSet"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/PermissionSetResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /permission-sets/{permissionSetId}:
+    parameters:
+      - name: "permissionSetId"
+        in: "path"
+        description: "Id of PermissionSet to return"
+        required: true
+        schema:
+          type: "string"
+    get:
+      operationId: readPermissionSet
+      description: Access an existing Permission Set
+      tags:
+        - "permissionsets"
+      responses:
+        "200":
+          description: "Display Permission Set"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/PermissionSetResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      operationId: updatePermissionSet
+      description: Update an existing Permission Set
+      tags:
+        - "permissionsets"
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/PermissionSetRequest"
+      responses:
+        "200":
+          description: "Display updated Permission Set"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/PermissionSetResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    delete:
+      operationId: deletePermissionSet
+      description: Delete an existing Permission Set
+      tags:
+        - "permissionsets"
+      responses:
+        "200":
+          $ref: "#/components/responses/Deleted"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /permissions:
+    get:
+      operationId: getPermissions
+      tags:
+        - "permissionsets"
+      responses:
+        "200":
+          description: "Display available permissions"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/PermissionsResponse"
+  /grants:
+    get:
+      operationId: listGrants
+      tags:
+        - "grants"
+      parameters:
+        - $ref: "#/components/parameters/pagingOffset"
+        - $ref: "#/components/parameters/pagingLimit"
+        - name: "permissionSetId"
+          in: "query"
+          description: Limit to the specified permissionset
+          required: false
+          schema:
+            type: string
+        - name: "securableId"
+          in: "query"
+          description: Limit to the specified securable
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Display retrieved Grants"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/GrantsResponse"
+    post:
+      operationId: createGrant
+      tags:
+        - "grants"
+      responses:
+        "200":
+          description: "Display created Grant"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/GrantsResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "500":
+          $ref: "#/components/responses/ServerError"
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/GrantsRequest"
+  /grants/{grantId}:
+    parameters:
+      - name: "grantId"
+        in: "path"
+        description: "Id of Grant to return"
+        required: true
+        schema:
+          type: "string"
+    get:
+      operationId: readGrant
+      tags:
+        - "grants"
+      responses:
+        "200":
+          description: "Display Grant"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/GrantResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags:
+        - "grants"
+      operationId: updateGrant
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/GrantRequest"
+      responses:
+        "200":
+          description: "Display updated Grant"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/GrantResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+    delete:
+      operationId: deleteGrant
+      tags:
+        - "grants"
+      responses:
+        "200":
+          description: "Grant deleted"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /securables:
+    post:
+      operationId: createSecurable
+      tags:
+        - "securables"
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/SecurableRequest"
+      responses:
+        "200":
+          description: "Display created Securable"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/SecurableResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /securables/{securableId}:
+    parameters:
+      - name: "securableId"
+        in: "path"
+        description: "Id of Securable to return"
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: readSecurable
+      tags:
+        - "securables"
+      responses:
+        "200":
+          description: "Display Securable"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/SecurableResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    put:
+      tags:
+        - "securables"
+      operationId: updateSecurable
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/Securable"
+      responses:
+        "200":
+          description: "Display updated Securable"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/SecurableResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /securables/{securableId}/grants:
+    get:
+      tags:
+        - "securables"
+        - "grants"
+      operationId: readGrantsForSecurable
+      parameters:
+        - name: "securableId"
+          in: "path"
+          description: The securable to display grants for
+          required: true
+          schema:
+            type: string
+        - name: "subject"
+          in: "query"
+          description: Limit the assignments to the specified subject, optional
+          schema:
+            type: string
+        - $ref: "#/components/parameters/pagingOffset"
+        - $ref: "#/components/parameters/pagingLimit"
+      responses:
+        "200":
+          description: "Display Grants for Securable"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/GrantsResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /check-permissions:
+    parameters:
+      - name: "securableIds"
+        in: query
+        description: Id of the securable
+        required: true
+        schema:
+          type: array
+          items:
+            type: string
+          minItems: 1
+      - name: "permissions"
+        in: query
+        required: true
+        description: Permissions that need to be checked. All of these must be present for a successful request.
+        schema:
+          type: array
+          items:
+            type: string
+          minItems: 1
+    get:
+      tags:
+        - 'checks'
+      operationId: checkOwnPermissions
+      responses:
+        "200":
+          description: "Permissions present"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/CheckPermissionsResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      tags:
+        - 'checks'
+      operationId: checkPermissions
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/AuthorizationPrincipal"
+      responses:
+        "200":
+          description: "Permissions present"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/CheckPermissionsResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /users:
+    get:
+      tags:
+        - "subjects"
+      operationId: loadUsers
+      parameters:
+        - $ref: "#/components/parameters/pagingOffset"
+        - $ref: "#/components/parameters/pagingLimit"
+      responses:
+        "200":
+          description: "Get All Users"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/GetUsersResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "500":
+          $ref: "#/components/responses/ServerError"
+  /groups:
+    get:
+      tags:
+        - "subjects"
+      operationId: loadGroups
+      parameters:
+        - $ref: "#/components/parameters/pagingOffset"
+        - $ref: "#/components/parameters/pagingLimit"
+      responses:
+        "200":
+          description: "Get All Groups"
+          content:
+            "application/json":
+              schema:
+                $ref: "#/components/schemas/GetUserGroupsResponse"
+        "400":
+          $ref: "#/components/responses/BadInput"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+
+components:
+  responses:
+    NotFound:
+      description: "Object not found"
+      content:
+        'application/json':
+          schema:
+            $ref: "#/components/schemas/Error"
+    BadInput:
+      description: "Bad User Input"
+      content:
+        'application/json':
+          schema:
+            $ref: "#/components/schemas/Error"
+    Deleted:
+      description: "Object Deleted successfully"
+      content:
+        'application/json':
+          schema:
+            $ref: "#/components/schemas/DeletionResponse"
+    ServerError:
+      description: "Server Side Error"
+      content:
+        'application/json':
+          schema:
+            $ref: "#/components/schemas/Error"
+  parameters:
+    pagingOffset:
+      name: "offset"
+      in: query
+      description: Zero-based data offset for paging, defaults to 0.
+      required: false
+      schema:
+        default: 0
+        type: integer
+        format: int32
+    pagingLimit:
+      name: "limit"
+      in: query
+      description: Maximum number of records to return.
+      required: false
+      schema:
+        default: 50
+        type: integer
+        format: int32
+
+  schemas:
+    Pagination:
+      type: object
+      required:
+        - limit
+        - offset
+        - totalCount
+      properties:
+        limit:
+          type: integer
+        offset:
+          type: integer
+        totalCount:
+          type: integer
+    SimpleResponse:
+      type: object
+      required:
+        - requestId
+      properties:
+        requestId:
+          type: string
+    PagingResponse:
+      allOf:
+        - $ref: '#/components/schemas/SimpleResponse'
+        - properties:
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+          required:
+            - pagination
+    Error:
+      allOf:
+        - $ref: '#/components/schemas/SimpleResponse'
+        - properties:
+            data:
+              type: array
+              items:
+                type: string
+          required:
+            - messages
+    # Permission Sets:
+    BasePermissionSet:
+      type: object
+      required:
+        - name
+        - permissions
+      properties:
+        name:
+          type: string
+        permissions:
+          type: "array"
+          items:
+            type: "string"
+    PermissionSetRequest:
+      allOf:
+        - $ref: '#/components/schemas/BasePermissionSet'
+    PermissionSet:
+      allOf:
+        - $ref: "#/components/schemas/BasePermissionSet"
+        - properties:
+            id:
+              type: string
+          required:
+            - id
+    PermissionSetResponse:
+      allOf:
+        - $ref: "#/components/schemas/SimpleResponse"
+        - required:
+          - data
+        - properties:
+            data:
+              $ref: "#/components/schemas/PermissionSet"
+    PermissionSetsResponse:
+      allOf:
+        - $ref: "#/components/schemas/PagingResponse"
+        - properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/PermissionSet"
+          required:
+            - data
+
+    # Securables:
+    BaseSecurable:
+      type: object
+      required:
+        - name
+        - securableType
+        - inheritanceEnabled
+      properties:
+        name:
+          type: string
+        securableType:
+          $ref: "#/components/schemas/SecurableType"
+        parentId:
+          type: string
+        inheritanceEnabled:
+          type: boolean
+          default: true
+    SecurableRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseSecurable'
+    Securable:
+      allOf:
+        - $ref: '#/components/schemas/BaseSecurable'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: string
+    SecurableResponse:
+      allOf:
+        - $ref: '#/components/schemas/SimpleResponse'
+        - required:
+          - data
+        - properties:
+            data:
+              $ref: '#/components/schemas/Securable'
+    SecurableType:
+      type: string
+      enum:
+        - 'system'
+    Subject:
+      type: object
+      required:
+        - name
+        - subjectType
+      properties:
+        name:
+          type: string
+        subjectType:
+          $ref: "#/components/schemas/SubjectType"
+    SubjectType:
+      type: string
+      enum:
+        - "user"
+        - "group"
+    GrantRequest:
+      type: object
+      required:
+        - roleDefinition
+        - assignedTo
+        - subject
+      properties:
+        roleDefinition:
+          type: string
+        assignedTo:
+          type: string
+        subject:
+          $ref: "#/components/schemas/Subject"
+    GrantsRequest:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/GrantRequest"
+    BaseGrant:
+      type: object
+      required:
+        - roleDefinition
+        - assignedTo
+        - subject
+      properties:
+        roleDefinition:
+          $ref: "#/components/schemas/PermissionSet"
+        assignedTo:
+          $ref: "#/components/schemas/Securable"
+        subject:
+          $ref: "#/components/schemas/Subject"
+    Grant:
+      allOf:
+        - $ref: "#/components/schemas/BaseGrant"
+        - properties:
+            id:
+              type: string
+          required:
+            - id
+    GrantResponse:
+      allOf:
+        - $ref: "#/components/schemas/SimpleResponse"
+        - properties:
+            data:
+              $ref: "#/components/schemas/Grant"
+          required:
+            - data
+    GrantsResponse:
+      allOf:
+        - $ref: "#/components/schemas/PagingResponse"
+        - properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/Grant"
+          required:
+            - data
+    DeletionResponse:
+      allOf:
+        - $ref: "#/components/schemas/SimpleResponse"
+    PermissionInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        displayName:
+          type: string
+      required:
+        - name
+        - displayName
+    PermissionsResponse:
+      allOf:
+        - $ref: "#/components/schemas/SimpleResponse"
+        - properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/PermissionInfo"
+          required:
+            - data
+    AuthorizationResult:
+      required:
+        - securableId
+        - isAuthorized
+        - missingPermissions
+      properties:
+        securableId:
+          type: string
+        isAuthorized:
+          type: boolean
+        missingPermissions:
+          type: array
+          items:
+            type: string
+
+    CheckPermissionsResponse:
+      allOf:
+        - $ref: "#/components/schemas/SimpleResponse"
+        - required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/AuthorizationResult"
+
+    # Users
+    AuthorizationPrincipal:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          type: string
+        groups:
+          type: array
+          items:
+            type: string  
+    User:
+      type: object
+      required:
+        - username
+        - fullName
+        - email
+      properties:
+        username:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+    GetUsersResponse:
+      allOf:
+        - $ref: "#/components/schemas/PagingResponse"
+        - properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/User"
+          required:
+            - data
+    # UserGroups
+    UserGroup:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+    GetUserGroupsResponse:
+      allOf:
+        - $ref: "#/components/schemas/PagingResponse"
+        - properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/UserGroup"
+          required:
+            - data
